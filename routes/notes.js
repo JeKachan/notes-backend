@@ -1,33 +1,71 @@
 var express = require('express');
-var models = require("../models");
-
+var Note = require("../models").Note;
+var mockNotes = require("../note_fixture");
 var router = express.Router();
-
-var mockNotes = [
-  {
-    id: 0,
-    title: 'Learn Ionic',
-    desc: 'The top open source framework for building amazing mobile apps.',
-  },
-  {
-    id: 1,
-    title: 'Learn Cordova',
-    desc: 'Mobile apps with HTML, CSS & JS target multiple platforms with one code base free and open source',
-  },
-  {
-    id: 2,
-    title: 'Learn JavaScript',
-    desc: 'JavaScript is the programming language of HTML and the Web.',
-  }
-];
 
 /* GET notes listing. */
 router.get('/', function(req, res, next) {
-  models.Note.findAll()
+  Note.findAll()
     .then(function(notes) {
-      notes = mockNotes;
       res.send(notes);
     });
+});
+
+router.post('/add', function(req, res, next) {
+  var note = {
+    title: req.body.title,
+    desc: req.body.desc
+  };
+  Note.build(note)
+    .save()
+    .then(function(newNote) {
+      res.send(newNote);
+    })
+    .catch(function(errors) {
+      res.status(500).send(errors.errors.map(function(err) {
+        return { message: err.message, path: err.path }
+      }));
+    });
+});
+
+router.post("/update", function(req, res, next) {
+  var noteId = parseInt(req.body.id);
+  if (!noteId) {
+    res.status(500).send("Incorrect note id.");
+    return;
+  }
+  Note.update({
+    title: req.body.title,
+    desc: req.body.desc
+  }, { where : { id: noteId}})
+    .then(function() {
+      res.send({success: true});
+    })
+    .catch(function(err) {
+      res.status(500).send( { success: false, message: err.message} );
+    })
+});
+
+router.delete("/delete/:noteId", function(req, res, next) {
+  var noteId = parseInt(req.params.noteId);
+  if (!noteId) {
+    res.status(500).send("Incorrect note id");
+    return;
+  }
+  Note.findById(noteId).then(function(note) {
+    if (!note) {
+      res.status(404).send("Note not founded.");
+      return;
+    }
+    note.destroy()
+      .then(function() {
+        res.send({ success: true });
+      })
+      .catch(function() {
+        console.log("Destroy error \n", arguments);
+        res.send({ success: false});
+      });
+  });
 });
 
 module.exports = router;
