@@ -1,4 +1,6 @@
 var express = require('express');
+var models = require("../models");
+
 var router = express.Router();
 
 var mockNotes = [
@@ -21,7 +23,11 @@ var mockNotes = [
 
 /* GET notes listing. */
 router.get('/', function(req, res, next) {
-  res.send({test: "test"});
+  models.Note.findAll()
+    .then(function(notes) {
+      notes = mockNotes;
+      res.send(notes);
+    });
 });
 
 module.exports = router;
