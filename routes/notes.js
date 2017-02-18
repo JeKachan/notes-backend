@@ -48,24 +48,26 @@ router.post("/update", function(req, res, next) {
 
 router.delete("/delete/:noteId", function(req, res, next) {
   var noteId = parseInt(req.params.noteId);
-  if (!noteId) {
-    res.status(500).send("Incorrect note id");
-    return;
-  }
-  Note.findById(noteId).then(function(note) {
-    if (!note) {
-      res.status(404).send("Note not founded.");
-      return;
+  new Promise(function(resolve, reject) {
+    if (!noteId) {
+      reject({message: "Incorrert note id", status: 404})
     }
-    note.destroy()
-      .then(function() {
-        res.send({ success: true });
-      })
-      .catch(function() {
-        console.log("Destroy error \n", arguments);
-        res.send({ success: false});
-      });
+    else {
+      resolve(noteId);
+    }
+  }).then(function(noteId) {
+    return Note.findById(noteId);
+  }).then(function(note) {
+    if (!note) {
+      return Promise.reject({message: "Note not founded.", status: 404});
+    }
+    return note.destroy()
+  }).then(function() {
+    res.send({ success: true });
+  }).catch(function(err) {
+    res.status(err.status || 500).send({ success: false, message: err.message});
   });
 });
+
 
 module.exports = router;
