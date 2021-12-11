@@ -1,5 +1,7 @@
-module.exports = function(sequelize, DataTypes) {
-  var Note = sequelize.define("Note", {
+'use strict';
+
+module.exports = function defineNote(sequelize, DataTypes) {
+  return sequelize.define('Note', {
     title: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -15,6 +17,4 @@ module.exports = function(sequelize, DataTypes) {
       }
     }
   });
-
-  return Note;
 };
